@@ -20,7 +20,13 @@ Los datos se almacenan en PostgreSQL (Supabase) y el dashboard se publicará en 
 - `data/limpiar.py` – limpieza y transformación de los datos de FAOSTAT
 - `data/schema.sql` – tablas de la base de datos
 - `data/*.csv` – datos limpios (países, producción, balance alimentario)
+- `docs/` – documentos entregados en cada fase
+
+## Fases del proyecto
+- **Fase 1 – Análisis:** audiencia, objetivos, limpieza de datos y tipo de dashboard → [`docs/Fase1_Justificacion.pdf`](docs/Fase1_Justificacion.pdf)
+- **Fase 2 – Diseño:** KPIs, tipos de gráfico, paleta de colores, wireframe y cuadrícula → [`docs/Fase2_Diseno_dashboard.pdf`](docs/Fase2_Diseno_dashboard.pdf)
 
 ## Estado
 - [x] Fase 1: Análisis
-- [ ] Fase 2
+- [x] Fase 2: Diseño
+- [ ] Fase 3
