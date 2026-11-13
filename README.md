@@ -14,19 +14,31 @@ disponibilidad de alimentos por país, continente y grupo de alimento (2015–20
 abiertos de FAOSTAT (FAO). Permite detectar desigualdades en la producción y el consumo de
 alimentos e identificar regiones clave para la seguridad alimentaria global.
 
-Los datos se almacenan en PostgreSQL (Supabase) y el dashboard se publicará en GitHub Pages o Vercel.
+Los datos se almacenan en PostgreSQL (Supabase) y el dashboard está publicado en GitHub Pages:
+**https://cynthiaramayoake-hash.github.io/Seguridad-alimentaria-y-producci-n-global-3/**
 
 ## Estructura
+- `dashboard/` – aplicación en React + Vite (Fase 3)
 - `data/limpiar.py` – limpieza y transformación de los datos de FAOSTAT
 - `data/schema.sql` – tablas de la base de datos
+- `data/supabase_tablas.sql` – script con el que se crearon las tablas y permisos en Supabase
 - `data/*.csv` – datos limpios (países, producción, balance alimentario)
 - `docs/` – documentos entregados en cada fase
+
+## Cómo correr el dashboard
+```bash
+cd dashboard
+npm install
+npm run dev
+```
+Stack: React + Vite, Recharts (gráficas), React-Leaflet (mapa), supabase-js (datos) y CSS Modules (estilos con la paleta de la Fase 2).
 
 ## Fases del proyecto
 - **Fase 1 – Análisis:** audiencia, objetivos, limpieza de datos y tipo de dashboard → [`docs/Fase1_Justificacion.pdf`](docs/Fase1_Justificacion.pdf)
 - **Fase 2 – Diseño:** KPIs, tipos de gráfico, paleta de colores, wireframe y cuadrícula → [`docs/Fase2_Diseno_dashboard.pdf`](docs/Fase2_Diseno_dashboard.pdf)
+- **Fase 3 – Implementación:** dashboard funcional en React conectado a Supabase → carpeta [`dashboard/`](dashboard/)
 
 ## Estado
 - [x] Fase 1: Análisis
 - [x] Fase 2: Diseño
-- [ ] Fase 3
+- [x] Fase 3: Implementación

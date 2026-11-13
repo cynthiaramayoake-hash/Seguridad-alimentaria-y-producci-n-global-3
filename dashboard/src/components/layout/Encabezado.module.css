@@ -1,0 +1,7 @@
+.encabezado {
+  grid-column: 1 / 4;
+  background: var(--verde); color: #fff; border-radius: 12px;
+  display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 0 24px;
+}
+.titulo { font-size: 25px; font-weight: 700; }
+.sub { font-size: 13px; opacity: .85; margin-top: 3px; }

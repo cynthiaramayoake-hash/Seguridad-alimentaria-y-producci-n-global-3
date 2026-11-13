@@ -1,0 +1,9 @@
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: var(--fondo);
+  color: var(--carbon);
+  font-family: "Helvetica Neue", Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+button, select { font-family: inherit; }
+.leaflet-container { background: transparent; font-family: inherit; }
