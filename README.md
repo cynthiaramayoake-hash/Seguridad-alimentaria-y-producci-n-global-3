@@ -36,7 +36,7 @@ Stack: React + Vite, Recharts (gráficas), React-Leaflet (mapa), supabase-js (da
 ## Fases del proyecto
 - **Fase 1 – Análisis:** audiencia, objetivos, limpieza de datos y tipo de dashboard → [`docs/Fase1_Justificacion.pdf`](docs/Fase1_Justificacion.pdf)
 - **Fase 2 – Diseño:** KPIs, tipos de gráfico, paleta de colores, wireframe y cuadrícula → [`docs/Fase2_Diseno_dashboard.pdf`](docs/Fase2_Diseno_dashboard.pdf)
-- **Fase 3 – Implementación:** dashboard funcional en React conectado a Supabase → carpeta [`dashboard/`](dashboard/)
+- **Fase 3 – Implementación:** dashboard funcional en React conectado a Supabase → carpeta [`dashboard/`](dashboard/) y [`docs/Fase3_Implementacion_dashboard.pdf`](docs/Fase3_Implementacion_dashboard.pdf)
 
 ## Estado
 - [x] Fase 1: Análisis
