@@ -1,0 +1,22 @@
+.area { grid-column: 1 / 3; }
+.zona { position: absolute; inset: 0 0 40px 0; }
+.mapa { width: 100%; height: 100%; }
+
+/* Tooltip del país (mismo estilo que en el mockup: tarjeta blanca, borde gris, nombre en negrita) */
+.zona :global(.tooltip-pais) {
+  background: var(--tarjeta); color: var(--carbon); border: 1px solid var(--gris); border-radius: 6px;
+  box-shadow: none; padding: 7px 10px; font-size: 11.5px; line-height: 1.45;
+}
+.zona :global(.tooltip-pais b) { font-size: 12px; }
+.zona :global(.tooltip-pais .nota) { color: var(--texto2); }
+.zona :global(.leaflet-control-zoom) { border: 1px solid var(--borde); box-shadow: none; }
+.zona :global(.leaflet-control-zoom a) { color: var(--carbon); }
+
+/* Leyenda */
+.leyenda { position: absolute; left: 0; bottom: 0; display: flex; margin: 0; padding: 0; list-style: none; font-size: 11.5px; color: var(--texto2); }
+.item { position: relative; display: flex; align-items: center; gap: 5px; width: 100px; }
+.muestra { width: 14px; height: 14px; flex: none; border: .5px solid #D6D2C9; border-radius: 2px; }
+.sinDato { background: repeating-linear-gradient(45deg, #CFCBC2 0 1.5px, #F2F0EB 1.5px 4px); }
+/* Marca vertical del umbral entre la 2.ª y la 3.ª clase */
+.umbral { position: absolute; left: -5px; top: -4px; height: 22px; border-left: 1.5px solid var(--carbon); }
+.umbralTexto { position: absolute; bottom: 100%; left: 0; transform: translateX(-50%); margin-bottom: 1px; white-space: nowrap; font-weight: 700; color: var(--carbon); }

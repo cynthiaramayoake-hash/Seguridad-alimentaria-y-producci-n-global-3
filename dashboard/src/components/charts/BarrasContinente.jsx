@@ -7,8 +7,8 @@ import { formato } from '../../utils/kpis'
 // KPI secundario 1: producción por continente (barras horizontales ordenadas)
 export default function BarrasContinente({ datos, anio, grupo, continente }) {
   return (
-    <Tarjeta titulo="Producción por continente"
-      subtitulo={`Millones de toneladas · ${grupo === 'Todos' ? '7 grupos de alimento' : grupo}, ${anio}`}>
+    <Tarjeta titulo={`Producción de ${grupo === 'Todos' ? 'alimentos' : grupo.toLowerCase()} por continente`}
+      subtitulo={`Millones de toneladas, ${anio} · ordenado de mayor a menor`}>
       <ResponsiveContainer width="100%" height="100%">
         <BarChart data={datos} layout="vertical" margin={{ top: 4, right: 56, left: 4, bottom: 0 }} barCategoryGap="28%">
           <XAxis type="number" hide />

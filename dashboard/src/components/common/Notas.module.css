@@ -1,4 +1,4 @@
 .notas { font-size: 12.5px; color: var(--texto2); line-height: 1.5; display: flex; flex-direction: column; gap: 3px; }
 .notas b { color: var(--carbon); }
-.aviso { color: var(--ambar); }
+.aviso { color: var(--carbon); font-weight: 600; }
 .fuente { margin-top: 4px; font-size: 11.5px; }

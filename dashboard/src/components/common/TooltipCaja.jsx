@@ -9,7 +9,7 @@ export default function TooltipCaja({ active, payload, label, unidad = 'Mt', tit
       {payload.map((p) => (
         <div key={p.dataKey ?? p.name}>
           <span className={styles.punto} style={{ background: p.color || p.payload?.fill }} />
-          {p.name}: {Number(p.value).toLocaleString('es-MX', { maximumFractionDigits: 1 })} {unidad}
+          {p.name}: {Number(p.value).toLocaleString('es-MX', { maximumFractionDigits: Number(p.value) < 1 ? 2 : 1 })} {unidad}
         </div>
       ))}
     </div>

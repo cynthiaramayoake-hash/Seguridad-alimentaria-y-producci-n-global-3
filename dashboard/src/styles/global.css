@@ -2,7 +2,7 @@
 body {
   background: var(--fondo);
   color: var(--carbon);
-  font-family: "Helvetica Neue", Arial, sans-serif;
+  font-family: "Inter", "Helvetica Neue", Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
 button, select { font-family: inherit; }

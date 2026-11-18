@@ -20,12 +20,57 @@ export function kcalPorPais(kcal, anio) {
   for (const f of kcal) if (f.anio === anio) mapa[f.iso3] = Number(f.valor)
   return mapa
 }
+// El número grande es la mediana de todos los países con dato ese año. La tendencia (cambio vs 2015 y mini
+// gráfica) usa solo el "panel": países con dato en todos los años, para no confundir cambios de cobertura
+// con cambios reales (Fase 2: 168 países, +70 kcal).
 export function kpiPrincipal(kcal, anio, isos) {
-  const valoresDe = (a) => kcal.filter((f) => f.anio === a && isos.has(f.iso3)).map((f) => Number(f.valor))
-  const actual = mediana(valoresDe(anio))
-  const base = mediana(valoresDe(2015))
-  const serie = [...new Set(kcal.map((f) => f.anio))].sort().map((a) => ({ anio: a, kcal: mediana(valoresDe(a)) }))
-  return { mediana: actual, cambio: actual != null && base != null ? actual - base : null, serie }
+  const anios = [...new Set(kcal.map((f) => f.anio))].sort()
+  const conteo = {}
+  for (const f of kcal) conteo[f.iso3] = (conteo[f.iso3] || 0) + 1
+  const panel = new Set(Object.keys(conteo).filter((iso) => conteo[iso] === anios.length && isos.has(iso)))
+  const valoresDe = (a, filtro) => kcal.filter((f) => f.anio === a && isos.has(f.iso3) && filtro(f.iso3)).map((f) => Number(f.valor))
+  const todos = () => true
+  const delPanel = (iso) => panel.has(iso)
+  const actual = mediana(valoresDe(anio, todos))
+  const actualPanel = mediana(valoresDe(anio, delPanel))
+  const basePanel = mediana(valoresDe(anios[0], delPanel))
+  const serie = anios.filter((a) => a <= anio).map((a) => ({ anio: a, kcal: mediana(valoresDe(a, delPanel)) }))
+  return {
+    mediana: actual,
+    // se restan las medianas ya redondeadas (2,947 − 2,877), tal como se leen en pantalla y en la Fase 2
+    cambio: actualPanel != null && basePanel != null ? Math.round(actualPanel) - Math.round(basePanel) : null,
+    paisesPanel: panel.size,
+    serie,
+  }
+}
+
+// Dependencia de importación por país (%): importación / suministro interno, con la identidad del balance de la FAO
+// (suministro interno = producción + importación − exportación − variación de existencias). Yemen, cereales 2023: 83%.
+export function dependenciaPorPais(balance, grupo) {
+  const t = {}
+  for (const f of balance) {
+    if (grupo !== 'Todos' && f.grupo !== grupo) continue
+    t[f.iso3] ??= {}
+    t[f.iso3][f.elemento] = (t[f.iso3][f.elemento] || 0) + Number(f.valor)
+  }
+  const out = {}
+  for (const [iso, e] of Object.entries(t)) {
+    const suministro = (e['Producción'] || 0) + (e['Importación'] || 0) - (e['Exportación'] || 0) - (e['Variación de existencias'] || 0)
+    if (suministro > 0) out[iso] = ((e['Importación'] || 0) / suministro) * 100
+  }
+  return out
+}
+
+// Producción por país (Mt) para el grupo y año elegidos, con la marca de variación atípica
+export function produccionPorPais(prod, { grupo, anio }) {
+  const out = {}
+  for (const f of prod) {
+    if (f.anio !== anio || (grupo !== 'Todos' && f.grupo !== grupo)) continue
+    out[f.iso3] ??= { mt: 0, atipica: false }
+    out[f.iso3].mt += Number(f.toneladas) / 1e6
+    if (Number(f.variacion_atipica) === 1) out[f.iso3].atipica = true
+  }
+  return out
 }
 
 // ---- Apoyo: países en riesgo (< 2,500 kcal) ----
@@ -40,6 +85,13 @@ const filtrarProduccion = (prod, { isos, grupo, anio }) =>
 
 export function produccionTotal(prod, filtros) {
   return sumar(filtrarProduccion(prod, filtros), 'toneladas') / 1e6 // millones de t
+}
+
+// Cambio porcentual de la producción respecto a 2015 con los mismos filtros (null si no hay base)
+export function cambioProduccion(prod, filtros) {
+  const actual = produccionTotal(prod, filtros)
+  const base = produccionTotal(prod, { ...filtros, anio: 2015 })
+  return base > 0 && filtros.anio !== 2015 ? ((actual - base) / base) * 100 : null
 }
 
 // KPI 1: producción por continente (ignora el filtro de continente para poder comparar)
@@ -66,7 +118,6 @@ export function evolucionPorGrupo(prod, isos, grupos) {
     porAnio[f.anio][f.grupo] = (porAnio[f.anio][f.grupo] || 0) + Number(f.toneladas) / 1e6
   }
   return Object.values(porAnio).sort((a, b) => a.anio - b.anio)
-    .map((r) => Object.fromEntries(Object.entries(r).map(([k, v]) => [k, k === 'anio' ? v : +v.toFixed(1)])))
     .map((r) => ({ ...r, ...Object.fromEntries(grupos.filter((g) => r[g] == null).map((g) => [g, 0])) }))
 }
 
@@ -80,26 +131,29 @@ export function topPaises({ prod, balance, paises, isos, grupo, anio, modo, n = 
         .map((f) => ({ iso3: f.iso3, v: Number(f.valor) }))
   for (const f of filas) tot[f.iso3] = (tot[f.iso3] || 0) + f.v
   return Object.entries(tot)
-    .map(([iso3, t]) => ({ pais: nombre[iso3] || iso3, mt: +(t / 1e6).toFixed(2) }))
+    .map(([iso3, t]) => ({ pais: nombre[iso3] || iso3, mt: t / 1e6 }))
     .sort((a, b) => b.mt - a.mt).slice(0, n)
 }
 
 // ---- KPI 4: destino de la producción (Sankey) ----
 const USOS = ['Alimento', 'Piensos', 'Exportación', 'Otros usos', 'Pérdidas', 'Procesado', 'Semilla']
+
+export const formatoCambio = (pct) => `${pct >= 0 ? '+' : '−'}${Number(Math.abs(pct)).toLocaleString('es-MX', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%`
 export function flujoDestino(balance, { isos, grupo }) {
   const tot = {}
   for (const f of balance) {
     if (!isos.has(f.iso3) || (grupo !== 'Todos' && f.grupo !== grupo)) continue
     tot[f.elemento] = (tot[f.elemento] || 0) + Number(f.valor)
   }
-  const mt = (e) => Math.max(0, (tot[e] || 0) / 1e6)
-  const nodos = [{ name: 'Producción' }, { name: 'Importación' }, { name: 'Suministro' }, ...USOS.map((u) => ({ name: u }))]
-  const links = [
-    { source: 0, target: 2, value: mt('Producción') },
-    { source: 1, target: 2, value: mt('Importación') },
-    ...USOS.map((u, i) => ({ source: 2, target: 3 + i, value: mt(u) })),
-  ].filter((l) => l.value > 0.05)
-  return { nodes: nodos, links, totales: Object.fromEntries(['Producción', 'Importación', ...USOS].map((e) => [e, mt(e)])) }
+  const mt = (e) => (tot[e] || 0) / 1e6
+  // Identidad del balance (FAO): producción + importación − exportación − variación de existencias = suministro interno
+  const suministro = mt('Producción') + mt('Importación') - mt('Exportación') - mt('Variación de existencias')
+  return {
+    totales: {
+      ...Object.fromEntries(['Producción', 'Importación', 'Variación de existencias', ...USOS].map((e) => [e, mt(e)])),
+      'Suministro interno': suministro,
+    },
+  }
 }
 
 export const formato = (n, dec = 0) =>

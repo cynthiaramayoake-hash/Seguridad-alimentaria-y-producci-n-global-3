@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import Encabezado from './components/layout/Encabezado'
 import KpiPrincipal from './components/kpis/KpiPrincipal'
 import KpiTarjeta from './components/kpis/KpiTarjeta'
-import MapaKcal from './components/map/MapaKcal'
+import MapaPaises from './components/map/MapaPaises'
 import BarrasContinente from './components/charts/BarrasContinente'
 import LineaEvolucion from './components/charts/LineaEvolucion'
 import TopPaises from './components/charts/TopPaises'
@@ -18,7 +18,7 @@ const ANIOS = [2024, 2023, 2022, 2021, 2020, 2019, 2018, 2017, 2016, 2015]
 const CONTINENTES = ['Todos', 'África', 'América', 'Asia', 'Europa', 'Oceanía']
 
 export default function App() {
-  const [filtros, setFiltros] = useState({ anio: 2023, continente: 'Todos', grupo: 'Todos' })
+  const [filtros, setFiltros] = useState({ anio: 2023, continente: 'Todos', grupo: 'Cereales' })
   const [modoTop, setModoTop] = useState('productores')
   const d = useDashboardData(filtros.anio)
   const { anio, continente, grupo } = filtros
@@ -30,11 +30,15 @@ export default function App() {
     const isos = K.paisesFiltrados(d.paises, continente)
     return {
       isos,
+      atipicos: d.produccion.filter((f) => Number(f.variacion_atipica) === 1).length,
       nombres: Object.fromEntries(d.paises.map((p) => [p.iso3, p.pais])),
       principal: K.kpiPrincipal(d.kcal, anioB, isos),
       riesgo: K.paisesEnRiesgo(d.kcal, anioB, isos),
       kcalPais: K.kcalPorPais(d.kcal, anioB),
+      dependencia: K.dependenciaPorPais(d.balance, grupo),
+      produccionPais: K.produccionPorPais(d.produccion, { grupo, anio }),
       prodTotal: K.produccionTotal(d.produccion, { isos, grupo, anio }),
+      prodCambio: K.cambioProduccion(d.produccion, { isos, grupo, anio }),
       continentes: K.produccionPorContinente(d.produccion, d.paises, { grupo, anio }),
       evolucion: K.evolucionPorGrupo(d.produccion, isos, GRUPOS),
       top: K.topPaises({ prod: d.produccion, balance: d.balance, paises: d.paises, isos, grupo,
@@ -50,6 +54,10 @@ export default function App() {
   const notaProd = continente === 'Todos'
     ? `Asia aporta ${K.formato(asia?.pct)}% del total`
     : `${K.formato(k.continentes.find((c) => c.continente === continente)?.pct)}% de la producción mundial`
+  const cambioProd = k.prodCambio == null ? 'año base' : `${k.prodCambio >= 0 ? '▲ +' : '▼ '}${K.formato(Math.abs(k.prodCambio), 1)}% vs 2015`
+  const queProduccion = grupo === 'Todos' ? 'alimentos (7 grupos)' : grupo.toLowerCase()
+  const aviso = anio > anioB ? ` (último año con balance)` : ''
+  const verMapa = () => document.getElementById('mapa')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
 
   return (
     <main className={styles.tablero}>
@@ -58,15 +66,17 @@ export default function App() {
         opciones={{ anios: ANIOS, continentes: CONTINENTES, grupos: ['Todos', ...GRUPOS] }} />
 
       {/* Fila 2: panel de KPIs */}
-      <KpiPrincipal datos={k.principal} anio={anioB} continente={continente} />
-      <KpiTarjeta titulo="Países en riesgo" subtitulo={`Disponibilidad menor a 2,500 kcal, ${anioB}`}
+      <KpiPrincipal datos={k.principal} anio={anioB} continente={continente} aviso={aviso} />
+      <KpiTarjeta titulo="Países en riesgo" subtitulo={`${aviso ? 'Menor a' : 'Disponibilidad menor a'} 2,500 kcal por persona al día, ${anioB}${aviso}`}
         valor={k.riesgo.enRiesgo} unidad={`de ${k.riesgo.total} países`} color={PALETA.ambar}
-        nota={`${K.formato((k.riesgo.enRiesgo / Math.max(k.riesgo.total, 1)) * 100)}% de los países con balance alimentario`} />
-      <KpiTarjeta titulo="Producción" subtitulo={`${grupo === 'Todos' ? '7 grupos de alimento' : grupo} · ${continente === 'Todos' ? 'mundo' : continente}, ${anio}`}
-        valor={K.formato(k.prodTotal)} unidad="millones de t" color={PALETA.turquesa} nota={notaProd} />
+        nota={<>{K.formato((k.riesgo.enRiesgo / Math.max(k.riesgo.total, 1)) * 100)}% de los países con balance alimentario · <button type="button" className={styles.enlace} onClick={verMapa}>ver mapa</button></>} />
+      <KpiTarjeta titulo={continente === 'Todos' ? `Producción mundial de ${queProduccion}` : `Producción de ${queProduccion} en ${continente}`}
+        subtitulo={`Millones de toneladas, ${anio} · cambia con el filtro de grupo`}
+        valor={K.formato(k.prodTotal)} unidad="millones de t" color={PALETA.turquesa} nota={`${cambioProd} · ${notaProd}`} marca="" />
 
       {/* Fila 3 */}
-      <MapaKcal kcalPais={k.kcalPais} isos={k.isos} anio={anioB} nombres={k.nombres} continente={continente} />
+      <MapaPaises kcalPais={k.kcalPais} isos={k.isos} anio={anioB} anioProduccion={anio} nombres={k.nombres} continente={continente}
+        grupo={grupo} dependencia={k.dependencia} produccionPais={k.produccionPais} />
       <BarrasContinente datos={k.continentes} anio={anio} grupo={grupo} continente={continente} />
 
       {/* Fila 4 */}
@@ -76,7 +86,7 @@ export default function App() {
 
       {/* Fila 5 */}
       <SankeyDestino datos={k.flujo} anio={anioB} grupo={grupo} continente={continente} />
-      <Notas fuente={d.fuente} anio={anio} anioBalance={anioB} />
+      <Notas fuente={d.fuente} anio={anio} anioBalance={anioB} atipicos={k.atipicos} />
     </main>
   )
 }
